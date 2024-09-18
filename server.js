@@ -30,17 +30,7 @@ app.get(`/test`,(req,res) => {
    res.send("hellooooooo");
  }
 );
-//demo get pramams từ URL
-// app.post(`/user/:id/:hoTen`, (req,res) => {
-//    let prams= req.params;
-//    let{id,hoTen}=prams;
-//    let body =req.body;
-//    res.send({
-//       id,
-//       hoTen
-//    });
-// }
-// );
+
 //import rootRoutes
 app.use(rootRoutes);
 
@@ -57,19 +47,8 @@ app.get(`/test-header`, (req,res) => {
 }
 );
 
-// app.get('/users',async(req,res) => {
-//   try {
-//     const [data]= await pool.query(`SELECT * FROM users`);
-//     res.status(OK).json(data);
-//   } catch (error) {
-//     res.status(INTERNAL_SERVER).json({message:'error'});
-//   }
-// }
-// );
-
 app.listen(8080,() => {
   console.log("Server online at port 8080");
 }
 );
 
-//test 
