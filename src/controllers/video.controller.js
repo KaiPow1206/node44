@@ -1,0 +1,20 @@
+import initModels from "../models/init-models.js";
+import sequelize from '../models/connect.js';
+import { Op } from 'sequelize';
+
+
+const model = initModels(sequelize);
+
+const getListVideo = async (req,res) => {
+   try {
+      let data = await model.video.findAll();
+      res.status(200).json(data);
+   } catch (error) {
+      return res.status(404).json({message:"error"});
+   }
+}
+
+
+export{
+   getListVideo,
+}

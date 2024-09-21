@@ -1,6 +1,6 @@
 import { Sequelize } from "sequelize";
 const sequelize = new Sequelize(
-   'node44', //tên database
+   'youtube_mini', //tên database
    'root', // tên user
    '123456',// mật khẩu
    {

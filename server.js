@@ -17,23 +17,20 @@ import express from 'express';
 import pool from './db.js';
 import { OK,INTERNAL_SERVER } from './const.js';
 import rootRoutes from './src/routes/root.router.js';
+import cors from 'cors';
 const app= express();
 //thêm middleware để đọc data json
 app.use(express.json());
-
-app.get(`/`,(req,res) => {
-  res.send("hello thai");
-}
-);
-
-app.get(`/test`,(req,res) => {
-   res.send("hellooooooo");
- }
-);
+//thêm middleware cors để FE có thể call API tới BE
+app.use(cors());
 
 //import rootRoutes
 app.use(rootRoutes);
-
+// hello
+app.get(`/test`,(req,res) => {
+  res.send("hellooooooo");
+}
+);
 //demo get query từ URL
 app.get(`/test-query`, (req,res) => {
       let query =req.query;
