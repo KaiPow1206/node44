@@ -10,6 +10,7 @@ const getListVideo = async (req,res) => {
       let data = await model.video.findAll();
       res.status(200).json(data);
    } catch (error) {
+      console.log(error)
       return res.status(404).json({message:"error"});
    }
 }
