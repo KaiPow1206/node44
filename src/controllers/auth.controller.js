@@ -2,6 +2,8 @@ import initModels from "../models/init-models.js";
 import sequelize from '../models/connect.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import transporter from "../config/transporter.js";
+import { createToken } from "../config/jwt.js";
 
 const model = initModels(sequelize);
 
@@ -23,6 +25,23 @@ const register = async(req,res,next) => {
          email:email,
          pass_word:bcrypt.hashSync(pass,10),
       });
+      // cấu hình info email
+      const mailOption = {
+         from:'nguyennhoanhthai@gmail.com',
+         to: email,
+         subject:"Welcome to our service",
+         text:`Hello ${fullName}.Best Regards.`
+      }
+      // gửi mail
+      transporter.sendMail(mailOption,(error,info) => {
+         if(error){
+            return res.status(500).json({message:"error"});
+         }
+         return res.status(200).json({
+            message: "Success Register",
+            data:userNew,
+         });
+      })
       return res.status(200).json({
          message: "Success Register",
          data:newAccount,
@@ -60,10 +79,7 @@ const login= async (req,res) => {
    let payload= {
       userID: user.user_id,
    }
-   let accessToken = jwt.sign({payload},"NODE44",{
-      algorithm: "HS256",
-      expiresIn: "1d"
-   })
+   let accessToken = createToken({userId:user.user_id});
    return res.status(200).json({
       message:"login successfully",
       data: accessToken,
@@ -73,8 +89,39 @@ const login= async (req,res) => {
   }
 }
 
+const loginFaceBook = async (req,res) => {
+   try {
+      //B1: Lấy id, email, name từ request
+      //B2: check id(app_face_id trong db)
+      //B2.1: nếu có app_face_idd => tạo access token => gửi về FE
+      //B2.2: nếu không có app_face_id => tạo user mới => tạo access token => gửi về FE
+      let {id,email,name}= req.body;
+      let user = await model.users.findOne({
+         where:{face_app_id: id}
+      })
+      if(!user){
+         let newUser ={
+            full_name: name,
+            face_app_id: id,
+            email,
+         }
+         user = await model.users.create(newUser);
+      }
+      let accessToken = createToken({userId:user.user_id})
+      return res.status(200).json({
+         message:"login successfully",
+         data: accessToken,
+      });
+   } catch (error) {
+
+      return res.status(500).json({message:"error"});
+   }
+}
+
+
 
 export {
    register,
    login,
+   loginFaceBook,
 }
