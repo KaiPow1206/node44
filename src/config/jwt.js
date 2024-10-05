@@ -7,36 +7,10 @@ dotenv.config();
 export const createToken = (data) => {
   return jwt.sign({payload:data},process.env.ACCESS_TOKEN_KEY,{
    algorithm: "HS256",
-   expiresIn: "1d"
+   expiresIn: "10s"
   })
 }
 
-// const verifyToken = (token) => {
-//   try {
-//    jwt.verify(token,process.env.ACCESS_TOKEN_KEY);
-//    return true;
-//   } catch (error) {
-//    //không verify được token
-//    return false;
-//   }
-// }
-
-// // create middlware toke
-// export const middlwareToken=(res,req,next) => {
-//   let { token } = req.headers;
-//   console.log(token);
-
-//   return
-
-//   let checkToken= verifyToken(token);
-//   if(checkToken){
-//    // nếu token hợp lệ =>pass=> qua router
-//    next()
-//   }
-//   else{
-//    return res.status(401).json({message:"Unauthorized"})
-//   }
-// }
 const verifyToken = (token) =>{
   try {
    jwt.verify(token,process.env.ACCESS_TOKEN_KEY);
@@ -47,11 +21,22 @@ const verifyToken = (token) =>{
   }
 }
 
+export const createRefToken = (data) => {
+   return jwt.sign({payload:data},process.env.REFESH_SECRET,{
+      algorithm: "HS256",
+      expiresIn: "1d"
+     })
+}
+
+
+
+
 //create middleware token
 
 export const middlewareToken = (req,res,next) =>{
    let { token } = req.headers;   
    let checkToken= verifyToken(token);
+
    if(checkToken){
    // nếu token hợp lệ =>pass=> qua router
       next()

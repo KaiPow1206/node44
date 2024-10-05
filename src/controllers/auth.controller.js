@@ -3,7 +3,8 @@ import sequelize from '../models/connect.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import transporter from "../config/transporter.js";
-import { createToken } from "../config/jwt.js";
+import { createRefToken, createToken } from "../config/jwt.js";
+import { where } from "sequelize";
 
 const model = initModels(sequelize);
 
@@ -80,6 +81,21 @@ const login= async (req,res) => {
       userID: user.user_id,
    }
    let accessToken = createToken({userId:user.user_id});
+   // creat refresh token và lưu vào database
+   let refreshToken =createRefToken({userID:user.user_id});
+   await model.users.update({
+      refresh_token: refreshToken
+   },{
+      where:{user_id:user.user_id}
+   });
+   // lưu refresh token vào cookie
+   res.cookie('refreshToken',refreshToken,{
+      httpOnly: true, // cookie không thể truy cập từ javascript
+      secure:false, // để chạy dưới local host
+      sameSite:'LAX', // để đảm bảo cookie được gửi trong các domain khác nhau
+      maxAge:7*24*60*60*1000
+
+   })
    return res.status(200).json({
       message:"login successfully",
       data: accessToken,
@@ -118,10 +134,57 @@ const loginFaceBook = async (req,res) => {
    }
 }
 
+// const extendToken= async(req,res) => {
+//   //Lấy refresh token từ cookie request
+//   const refreshToken = req.cookies.refreshToken;
+
+//   console.log("refreshToken", refreshToken)
+//   if(!refreshToken){
+//    return res.status(401)
+//   }
+//   const checkRefToken = await model.users.findOne({
+//    where:{
+//       refresh_token: refreshToken
+//    } 
+//   });
+//   if(!checkRefToken){
+//    return res.status(401)
+//   }
+//   const newToken = createToken({userID:checkRefToken.user_id})
+
+//   console.log("checkRefToken", newToken)
+
+//   return res.status(200).json({
+//    message:"successfully",
+//    data: newToken,
+// });
+// }
+const extendToken = async (req,res)=>{
+   // Lấy refresh token từ cookie request
+   const refreshToken= req.cookies.refreshToken;
+   console.log("refreshToken", refreshToken)
+   if(!refreshToken){
+       return res.status(401)
+   }
+   const checkRefToken= await model.users.findOne({
+       where:{
+           refresh_token: refreshToken
+       }
+   });
+   if(!checkRefToken){
+       return res.status(401)
+   }
+   const newToken = createToken({userId:checkRefToken.user_id})
+   console.log("newToken", newToken)
+   return res.status(200).json({message:"Success",data:newToken})
+}
+
+
 
 
 export {
    register,
    login,
    loginFaceBook,
+   extendToken,
 }
