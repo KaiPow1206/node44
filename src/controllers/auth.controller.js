@@ -3,7 +3,7 @@ import sequelize from '../models/connect.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import transporter from "../config/transporter.js";
-import { createRefToken, createToken } from "../config/jwt.js";
+import { createRefToken, createRefTokenAsyncKey, createToken, createTokenAsyncKey } from "../config/jwt.js";
 import { where } from "sequelize";
 
 const model = initModels(sequelize);
@@ -134,31 +134,6 @@ const loginFaceBook = async (req,res) => {
    }
 }
 
-// const extendToken= async(req,res) => {
-//   //Lấy refresh token từ cookie request
-//   const refreshToken = req.cookies.refreshToken;
-
-//   console.log("refreshToken", refreshToken)
-//   if(!refreshToken){
-//    return res.status(401)
-//   }
-//   const checkRefToken = await model.users.findOne({
-//    where:{
-//       refresh_token: refreshToken
-//    } 
-//   });
-//   if(!checkRefToken){
-//    return res.status(401)
-//   }
-//   const newToken = createToken({userID:checkRefToken.user_id})
-
-//   console.log("checkRefToken", newToken)
-
-//   return res.status(200).json({
-//    message:"successfully",
-//    data: newToken,
-// });
-// }
 const extendToken = async (req,res)=>{
    // Lấy refresh token từ cookie request
    const refreshToken= req.cookies.refreshToken;
@@ -174,9 +149,64 @@ const extendToken = async (req,res)=>{
    if(!checkRefToken){
        return res.status(401)
    }
-   const newToken = createToken({userId:checkRefToken.user_id})
+   // const newToken = createToken({userId:checkRefToken.user_id})
+   const newToken = createTokenAsyncKey({userId:checkRefToken.user_id})
    console.log("newToken", newToken)
    return res.status(200).json({message:"Success",data:newToken})
+}
+
+const loginAsyncKey = async (req,res) => {
+   try {
+      //B1: lấy email và password từ body req
+      //B2: check user thông qua email(get user từ db)
+      //B2.1: nếu không có user => ra error user not found
+      //B2.2: nếu có user => check tiếp password
+      //B2.2.1: nếu password không trùng nhau => password error
+      //B2.2.2: nếu password trùng => tạo access token
+      let{email,pass_word}=req.body;
+      let user = await model.users.findOne({
+         where:{
+            email,
+         }
+      });
+      if(!user){
+         return res.status(400).json({message:"Email is wrong"});
+      }
+      let checkPass = bcrypt.compareSync(pass_word,user.pass_word);
+      if (!checkPass){
+         return res.status(400).json({message:"Passwword is wrong"});
+      }
+      // tạo token 
+      //function style của jwt 
+      //param1: nơi tạo payload và lưu vào token
+      //param2: key tạo token 
+      //param3: chứa thông tin settings live time của token và thuật toán để tạo token 
+      let payload= {
+         userID: user.user_id,
+      }
+      let accessToken = createTokenAsyncKey({userId:user.user_id});
+      // creat refresh token và lưu vào database
+      let refreshToken =createRefTokenAsyncKey({userID:user.user_id});
+      await model.users.update({
+         refresh_token: refreshToken
+      },{
+         where:{user_id:user.user_id}
+      });
+      // lưu refresh token vào cookie
+      res.cookie('refreshToken',refreshToken,{
+         httpOnly: true, // cookie không thể truy cập từ javascript
+         secure:false, // để chạy dưới local host
+         sameSite:'LAX', // để đảm bảo cookie được gửi trong các domain khác nhau
+         maxAge:7*24*60*60*1000
+   
+      })
+      return res.status(200).json({
+         message:"login successfully",
+         data: accessToken,
+      });
+     } catch (error) {
+      return res.status(500).json({message:"error"});
+     }
 }
 
 
@@ -187,4 +217,5 @@ export {
    login,
    loginFaceBook,
    extendToken,
+   loginAsyncKey,
 }
