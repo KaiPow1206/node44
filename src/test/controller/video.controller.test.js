@@ -1,6 +1,6 @@
-import initModels from "./../models/init-models.js";
-import sequelize from "./../models/connect.js";
-import {getListVideo} from "./../controllers/video.controller.js"
+import initModels from "../../models/init-models.js";
+import sequelize from "../../models/connect.js";
+import {getListVideo} from "../../controllers/video.controller.js"
 import sinon from 'sinon'
 import {afterEach} from "mocha"
 import { expect } from "chai";
@@ -44,5 +44,7 @@ describe('getVideo',()=>{
 
         // kiem tra res.status duoc goi voi 200
         expect(res.status.calledWith(200)).to.be.true;
+        // kiểm tra đúng data
+        expect(res.json.calledWith(videos)).to.be.true;
     })
 })
