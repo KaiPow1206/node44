@@ -1,10 +1,12 @@
-import pool from '../../db.js'
 import { OK,INTERNAL_SERVER } from '../../const.js';
 import initModels from "../models/init-models.js";
 import sequelize from '../models/connect.js';
-import { Op } from 'sequelize';
+import { Op, where } from 'sequelize';
+import { PrismaClient } from "@prisma/client";
 
 const model = initModels(sequelize);
+const prisma = new PrismaClient();
+
 
 
 
@@ -19,10 +21,17 @@ const creatUser= async(req,res) => {
    //lấy data từ body của req
    try {
       const {full_name,email,pass_word}=req.body;
-      let newuser= await model.users.create({
+      // let newuser= await model.users.create({
+      //    full_name,
+      //    email,
+      //    pass_word
+      // })
+      let newuser= await prisma.users.create({
+       data:{
          full_name,
          email,
          pass_word
+       }
       })
       return res.status(201).json(newuser);
    } catch (error) {
@@ -69,11 +78,21 @@ const deleteUser = async(req,res) => {
    //    Delete FROM users
    //    Where users.users_id = ${users_id}
    //    `);
-      let user = await model.users.findByPk(user_id);
+      // let user = await model.users.findByPk(user_id);
+      let user = await prisma.users.findFirst({
+         where:{
+            user_id:Number(user_id)
+         }
+      });
       if(!user){
          return res.status(404).json({message:"User not found"})
       }
-      user.destroy();
+      // user.destroy();
+      await prisma.users.delete({
+         where:{
+            user_id: Number(user_id)
+         }
+      })
       res.status(OK).json({message:"User deleted successfully!"});
    } catch (error) {
      return res.status(INTERNAL_SERVER).json({message:'error'});
@@ -81,24 +100,38 @@ const deleteUser = async(req,res) => {
 }
 const updateUser = async(req,res) => {
    try {
-      // cách 1 
       const {user_id} = req.params;
       const {full_name, pass_word}= req.body;
       //check user có hay không
-      let user = await model.users.findByPk(user_id);
-      // if(!user){
-      //    return res.status(404).json({message:"User not found"});
-      // }
+      // let user = await model.users.findByPk(user_id);
 
+      let user = await prisma.users.findFirst({
+         where:{
+            user_id: Number(user_id)
+         }
+      });
+      if(!user){
+         return res.status(404).json({message:"User not found"});
+      }
+
+      // cách 1 
       // let data = await model.users.update({
       //    full_name,pass_word},
       //    {
       //       where:{user_id}
       //    }
       // )
-      user.full_name = full_name || user.full_name;
-      user.pass_word = pass_word || user.pass_word;
-      await user.save();
+      await prisma.users.update({
+         data:{full_name,pass_word},
+         where:{
+             user_id: Number(user_id)
+         }
+     })
+      // cách 2 
+      // user.full_name = full_name || user.full_name;
+      // user.pass_word = pass_word || user.pass_word;
+      // await user.save(); 
+      // prisma không support update trực tiếp
       return res.status(OK).json({message:"Update successfully!"})
    } catch (error) {
       console.log(error)

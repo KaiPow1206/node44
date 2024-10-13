@@ -4,17 +4,24 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import transporter from "../config/transporter.js";
 import { createRefToken, createRefTokenAsyncKey, createToken, createTokenAsyncKey } from "../config/jwt.js";
-import { where } from "sequelize";
 import cypto from 'crypto';
-import code from "../models/code.js";
+import { PrismaClient } from "@prisma/client";
+import speakeasy from 'speakeasy';
 
+
+const prisma = new PrismaClient();
 const model = initModels(sequelize);
 
 const register = async(req,res,next) => {
   try {
       const {fullName, email, pass}= req.body;
       console.log({fullName,email,pass});
-      const userExits= await model.users.findOne({
+      // const userExits= await model.users.findOne({
+      //    where:{
+      //       email:email,
+      //    }
+      // });
+      const userExits= await prisma.users.findFirst({
          where:{
             email:email,
          }
@@ -23,10 +30,20 @@ const register = async(req,res,next) => {
          return res.status(400).json({message:"Already account"})
       }
       //B3: thêm người mới vào
-      const newAccount  = await model.users.create({
-         full_name:fullName,
-         email:email,
-         pass_word:bcrypt.hashSync(pass,10),
+      // const newAccount  = await model.users.create({
+      //    full_name:fullName,
+      //    email:email,
+      //    pass_word:bcrypt.hashSync(pass,10),
+      // });
+      // tạo secret cho login 2 lớp
+      const secret = speakeasy.generateSecret({length:15});
+      const newAccount  = await prisma.users.create({
+         data:{
+            full_name:fullName,
+            email:email,
+            pass_word:bcrypt.hashSync(pass,10),
+            secret: secret.base32
+         }
       });
       // cấu hình info email
       const mailOption = {

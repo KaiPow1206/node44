@@ -1,13 +1,18 @@
 import initModels from "../models/init-models.js";
 import sequelize from '../models/connect.js';
-import { Op, where } from 'sequelize';
+import { NUMBER, Op, where } from 'sequelize';
+import { PrismaClient } from "@prisma/client";
+import users from "../models/users.js";
 
 
 const model = initModels(sequelize);
 
+const prisma = new PrismaClient();
+
 const getListVideo = async (req,res) => {
    try {
-      let data = await model.video.findAll();
+      // let data = await model.video.findAll();
+      let data = await prisma.video.findMany();
       res.status(200).json(data);
    } catch (error) {
       console.log(error)
@@ -17,7 +22,8 @@ const getListVideo = async (req,res) => {
 
 const getTyppeVideo = async (req,res) => {
    try {
-      let data = await model.video_type.findAll();
+      // let data = await model.video_type.findAll();
+      let data = await prisma.video_type.findMany();
       res.status(200).json(data);
    } catch (error) {
       return res.status(404).json({message:"error"});
@@ -27,9 +33,22 @@ const getTyppeVideo = async (req,res) => {
 const getTyppeDetails = async (req,res) => {
    try {
       let {typeID}= req.params;
-      let data = await model.video.findAll({
+      // let data = await model.video.findAll({
+      //    where: {
+      //       type_id:typeID
+      //    }
+      // })
+      let data = await prisma.video.findMany({
          where: {
-            type_id:typeID
+            type_id: NUMBER(typeID)
+         },
+         include:{
+            users:{
+               select:{
+                  full_name: true,
+                  email: true,
+               }
+            }
          }
       })
       return res.status(200).json(data);
@@ -50,9 +69,13 @@ const getVideoPage = async(req,res) => {
       return res.status(404).json({message:"Size is wrong"});
    }
    let index = (page - 1) * size;
-   let data = await model.video.findAll({
-      offset:index,
-      limit:size,
+   // let data = await model.video.findAll({
+   //    offset:index,
+   //    limit:size,
+   // })
+     let data = await prisma.video.findMany({
+      skip: index,
+      take:size,
    })
    res.status(200).json(data)
   } catch (error) {

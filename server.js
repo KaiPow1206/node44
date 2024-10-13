@@ -14,7 +14,6 @@ B5: khời tạo dự án:
 
 
 import express from 'express';
-import pool from './db.js';
 import { OK,INTERNAL_SERVER } from './const.js';
 import rootRoutes from './src/routes/root.router.js';
 import cors from 'cors';
