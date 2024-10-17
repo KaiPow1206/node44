@@ -16,7 +16,7 @@ dotenv.config();
 export const createToken = (data) => {
   return jwt.sign({payload:data},process.env.ACCESS_TOKEN_KEY,{
    algorithm: "HS256",
-   expiresIn: "10s"
+   expiresIn: "5m"
   })
 }
 
@@ -24,7 +24,7 @@ export const createToken = (data) => {
 export const createTokenAsyncKey = (data) => {
    return jwt.sign({payload:data},accessTokenPrivateKey,{
       algorithm: "RS256",
-      expiresIn: "10s"
+      expiresIn: "5m"
      })
 };
 
@@ -46,6 +46,7 @@ export const verifyTokenAsyncKey = (token) =>{
     return true;
    } catch (error) {
     //không verify được token
+    console.log(error);
     return false;
    }
  }
@@ -65,18 +66,15 @@ export const createRefTokenAsyncKey = (data) => {
      })
 }
 
-
-
-
 //create middleware token
 
 export const middlewareToken = (req,res,next) =>{
-   let { token } = req.headers;   
+   let {token} = req.headers;   
    let checkToken= verifyToken(token);
 
    if(checkToken){
    // nếu token hợp lệ =>pass=> qua router
-      next()
+      next();
    }
    else{
       return res.status(401).json({message:"Unauthorized"})
@@ -84,12 +82,11 @@ export const middlewareToken = (req,res,next) =>{
 }
 
 export const middlewareTokenAsyncKey = (req,res,next) =>{
-   let { token } = req.headers;   
+   let {token} = req.headers;
    let checkToken= verifyTokenAsyncKey(token);
-
    if(checkToken){
    // nếu token hợp lệ =>pass=> qua router
-      next()
+      next();
    }
    else{
       return res.status(401).json({message:"Unauthorized"})

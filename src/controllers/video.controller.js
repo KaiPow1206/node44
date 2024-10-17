@@ -40,17 +40,10 @@ const getTyppeDetails = async (req,res) => {
       // })
       let data = await prisma.video.findMany({
          where: {
-            type_id: NUMBER(typeID)
-         },
-         include:{
-            users:{
-               select:{
-                  full_name: true,
-                  email: true,
-               }
-            }
+            type_id: Number(typeID)
          }
-      })
+      });
+      
       return res.status(200).json(data);
    } catch (error) {
       return res.status(500).json({message:"error"});
