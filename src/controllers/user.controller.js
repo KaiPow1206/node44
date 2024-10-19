@@ -139,10 +139,35 @@ const updateUser = async(req,res) => {
    }
 }
 
+const uploadAvatar = async (req,res) => {
+   try {
+      let file = req.file;
+      let userID=req.body.userID;
+      let user = await model.users.findOne({
+         where:{
+            user_id:userID
+         }
+      })
+
+      if(!user){
+         return res.status(404).json({message: "User not found"});
+      }
+      
+      let avatarPath = `/public/imgs/${file.filename}`;
+      user.avatar=avatarPath || user.avatar;
+      await user.save();
+      return res.status(200).json({message: "Avatar updated successfully",data:avatarPath});
+   } catch (error) {
+      return res.status(500).json({message:"error api upload avatar"});
+   }
+}
+
+
 
 export{
    creatUser,
    getUser,
    deleteUser,
    updateUser,
+   uploadAvatar,
 }

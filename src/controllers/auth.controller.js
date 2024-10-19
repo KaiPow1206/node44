@@ -29,14 +29,15 @@ const register = async(req,res,next) => {
       if(userExits){
          return res.status(400).json({message:"Already account"})
       }
+      const secret = speakeasy.generateSecret({length:15});
       //B3: thêm người mới vào
       // const newAccount  = await model.users.create({
       //    full_name:fullName,
       //    email:email,
       //    pass_word:bcrypt.hashSync(pass,10),
+      //    secret: secret.base32
       // });
       // tạo secret cho login 2 lớp
-      const secret = speakeasy.generateSecret({length:15});
       const newAccount  = await prisma.users.create({
          data:{
             full_name:fullName,
@@ -178,7 +179,7 @@ const loginAsyncKey = async (req,res) => {
       //B2.2: nếu có user => check tiếp password
       //B2.2.1: nếu password không trùng nhau => password error
       //B2.2.2: nếu password trùng => tạo access token
-      let{email,pass_word}=req.body;
+      let{email,pass_word,code}=req.body;
       let user = await model.users.findOne({
          where:{
             email,
@@ -190,6 +191,16 @@ const loginAsyncKey = async (req,res) => {
       let checkPass = bcrypt.compareSync(pass_word,user.pass_word);
       if (!checkPass){
          return res.status(400).json({message:"Passwword is wrong"});
+      }
+
+      // check code nhập từ req
+      const verify =speakeasy.totp.verify({
+         secret: user.secret,
+         encoding: 'base32',
+         token:code
+      })
+      if (!verify){
+         return res.status(400).json({message:"Invalid 2FA"});
       }
       // tạo token 
       //function style của jwt 

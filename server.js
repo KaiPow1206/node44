@@ -19,6 +19,11 @@ import rootRoutes from './src/routes/root.router.js';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 const app= express();
+
+
+// define middlewear để public hình ra ngoài 
+app.use(express.static("."));
+
 //thêm middleware cors để FE có thể call API tới BE
 app.use(cors({
   origin:"http://localhost:3000",
