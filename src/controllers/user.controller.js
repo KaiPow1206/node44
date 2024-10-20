@@ -51,19 +51,19 @@ const getUser = async(req,res) => {
                
             },
          },
-         attributes:['user_id','full_name'],
-         include:[
-            {
-               model:model.video,//chọn model muốn kết bảng
-               as: 'videos',
-               attributes: ['video_name','user_id'],//chỉ định model muốn hiển thị
-               required:true,// default sẽ kết bảng theo left join muốn inner join thì required
-               include:[{
-                  model:model.video_comment,
-                  as: 'video_comments'
-               }],
-            }
-         ]
+         // attributes:['user_id','full_name'],
+         // include:[
+         //    {
+         //       model:model.video,//chọn model muốn kết bảng
+         //       as: 'videos',
+         //       attributes: ['video_name','user_id'],//chỉ định model muốn hiển thị
+         //       required:true,// default sẽ kết bảng theo left join muốn inner join thì required
+         //       include:[{
+         //          model:model.video_comment,
+         //          as: 'video_comments'
+         //       }],
+         //    }
+         // ]
       });
       return res.status(OK).json(data);
    } catch (error) {

@@ -31,13 +31,13 @@ const storage = new CloudinaryStorage({
             }
             return '.png'
         },
-        tranformation:[
-         {
-            width:800, // giới hạn chiều rộng 
-            quality:'auto:good', // nén chất lượng tốt
-            fetch_format: 'auto' // tự động chọn định dạng tốt nhất (webp,png,..)
-         }
-        ],
+        // tranformation:[
+        //  {
+        //     width:800, // giới hạn chiều rộng 
+        //     quality:'auto:good', // nén chất lượng tốt
+        //     fetch_format: 'auto' // tự động chọn định dạng tốt nhất (webp,png,..)
+        //  }
+        // ],
         public_id:(req,file)=>file.originalname.split(".")[0],
     }
 })
